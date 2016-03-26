@@ -25,7 +25,7 @@ end
 defmodule Hw1.Env1 do
     def start(n \\ 10) do
         server = spawn(PingPong, :pong, [])
-        spawn(PingPong, :ping, [n, server])
+        PingPong.ping(n, server)
     end
 end
 
@@ -35,12 +35,12 @@ defmodule Hw1.Env2 do
     def client(n \\ 10) do
         Common.connect_server_node()
         server = Common.connect_server_process()
-        spawn(PingPong, :ping, [n, server])
+        PingPong.ping(n, server)
     end
 
     def server() do
-        server = spawn(PingPong, :pong, [])
-        :global.register_name(:server, server)
+        :global.register_name(:server, self)
+        PingPong.pong()
     end
 end
 
@@ -51,13 +51,13 @@ defmodule Hw1.Env3 do
         Node.set_cookie(:nctu_ftc_hw1)
         Common.connect_server_node(server_host)
         server = Common.connect_server_process()
-        spawn(PingPong, :ping, [n, server])
+        PingPong.ping(n, server)
     end
 
     def server() do
         Node.set_cookie(:nctu_ftc_hw1)
-        server = spawn(PingPong, :pong, [])
-        :global.register_name(:server, server)
+        :global.register_name(:server, self)
+        PingPong.pong()
     end
 end
 

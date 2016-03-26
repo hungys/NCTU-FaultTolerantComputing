@@ -23,7 +23,7 @@ defmodule PingPong do
                 :timer.sleep(500)
                 send client_pid, :pong
                 IO.puts("server: pong ##{cnt} sent")
+                pong()
         end
-        pong()
     end
 end
