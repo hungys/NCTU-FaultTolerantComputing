@@ -1,6 +1,7 @@
 defmodule PingPong do
     def ping(n, cnt \\ 1, server_pid)
     def ping(0, cnt, server_pid) do
+        IO.puts("client: finished")
         send server_pid, :finished
     end
 
