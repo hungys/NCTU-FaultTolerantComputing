@@ -25,7 +25,7 @@ end
 defmodule Hw1.Env1 do
     def start(n \\ 10) do
         server = spawn(PingPong, :pong, [])
-        PingPong.ping(n, server)
+        spawn(PingPong, :ping, [n, server])
     end
 end
 
