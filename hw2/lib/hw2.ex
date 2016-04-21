@@ -2,11 +2,11 @@ defmodule Hw2 do
     @msgsize 4096
     @msgcount 51200
 
-    def init(name, link \\ "perfect", mode \\ :normal) do
+    def init(name, link \\ :perfect, mode \\ :normal) do
         case name do
-            "p" ->
+            :p ->
                 launch("p", "q", link, mode)
-            "q" ->
+            :q ->
                 launch("q", "p", link, mode)
             _ ->
                 IO.puts("Only p and q are supported!")
@@ -16,13 +16,13 @@ defmodule Hw2 do
     def launch(name, dest, link, mode) do
         listener = spawn(Hw2, :listen, [dest, mode])
         case link do
-            "perfect" ->
+            :perfect ->
                 pl = spawn(PerfectLink, :init, [name, listener])
                 sender(pl, dest)
-            "stubborn" ->
+            :stubborn ->
                 sl = spawn(StubbornLink, :init, [name, listener])
                 sender(sl, dest)
-            "fairloss" ->
+            :fairloss ->
                 fl = spawn(FairlossLink, :init, [name, listener])
                 sender(fl, dest)
             _ -> IO.puts("Unsupported link type: #{link}")
