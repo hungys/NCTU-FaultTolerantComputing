@@ -44,7 +44,10 @@ defmodule Hw2 do
             {:deliver, _, _, :end_exp} ->
                 if link == :fairloss do
                     ts = :os.system_time(:milli_seconds)
-                    IO.puts("Experiment ends at #{ts}")
+                    lossrate = 100 - (cnt + 1) / (@msgcount + 2) * 100
+                    lossrate = Float.to_string(lossrate, [decimals: 6, compact: true])
+                    IO.puts("\nExperiment ends at #{ts}")
+                    IO.puts("Packet loss rate: #{lossrate}%")
                 end
             _ -> :true
         end
@@ -53,7 +56,7 @@ defmodule Hw2 do
         if link == :perfect do
             if cnt == @msgcount + 2 do
                 ts = :os.system_time(:milli_seconds)
-                IO.puts("Experiment ends at #{ts}")
+                IO.puts("\nExperiment ends at #{ts}")
             end
         end
 
@@ -67,7 +70,7 @@ defmodule Hw2 do
     end
 
     def sender(link, dest) do
-        msg = IO.gets("> ")
+        msg = IO.gets("(hw2)> ")
         msg = String.strip(msg)
         case msg do
             "connect" -> connect(dest)
