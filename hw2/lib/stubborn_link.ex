@@ -11,7 +11,11 @@ defmodule StubbornLink do
         receive do
             {:send, dest, mid, msg} ->
                 sent = on_send(fl, sent, dest, mid, msg)
-            {:deliver, src, mid, msg} -> on_deliver(upper, src, mid, msg)
+            {:deliver, src, mid, msg} ->
+                on_deliver(upper, src, mid, msg)
+                send_ack(fl, src, mid)
+            {:ack, _, mid} ->
+                sent = Map.delete(sent, mid)
             :timeout -> on_timeout(fl, sent)
         end
         listen(upper, fl, sent)
@@ -34,5 +38,9 @@ defmodule StubbornLink do
 
     def on_timeout(fl, sent) do
         Enum.each(Map.values(sent), fn(s) -> send fl, Tuple.insert_at(s, 0, :send) end)
+    end
+
+    def send_ack(fl, dest, mid) do
+        send fl, {:send, dest, mid, :ack}
     end
 end

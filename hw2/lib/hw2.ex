@@ -1,6 +1,6 @@
 defmodule Hw2 do
     @msgsize 4096
-    @msgcount 256000
+    @msgcount 512000
 
     def init(link \\ :perfect, mode \\ :normal) do
         case Node.self do
@@ -58,7 +58,7 @@ defmodule Hw2 do
         end
 
         cond do
-            cnt > (@msgcount - 1000) -> IO.puts(cnt)
+            # cnt > (@msgcount - 1000) -> IO.puts(cnt)
             rem(cnt, 1000) == 0 -> IO.write(".")
             true -> :true
         end

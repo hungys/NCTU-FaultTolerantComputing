@@ -8,10 +8,18 @@ defmodule FairlossLink do
 
     def listen(upper) do
         receive do
+            {:send, dest, mid, :ack} -> on_send(dest, mid, :ack)
             {:send, dest, mid, msg} -> on_send(dest, mid, msg)
             {:deliver, src, mid, msg} -> on_deliver(upper, src, mid, msg)
+            {:ack, src, mid} -> on_ack(upper, src, mid)
         end
         listen(upper)
+    end
+
+    def on_send(pid, mid, :ack) do
+        if pid != :undefined and is_packet_loss?(:ack) == :false do
+            send pid, {:ack, self, mid}
+        end
     end
 
     def on_send(dest, mid, msg) do
@@ -25,11 +33,15 @@ defmodule FairlossLink do
         send upper, {:deliver, src, mid, msg}
     end
 
+    def on_ack(upper, src, mid) do
+        send upper, {:ack, src, mid}
+    end
+
     def is_packet_loss?(msg) do
         cond do
             msg == :start_exp or msg == :end_exp -> :false
             :random.uniform() < @lossrate ->
-                IO.puts("packet loss")
+                # IO.puts("packet loss")
                 :true
             :true -> :false
         end
