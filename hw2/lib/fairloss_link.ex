@@ -1,5 +1,5 @@
 defmodule FairlossLink do
-    @lossrate 0.00002
+    @lossrate 0.00005
 
     def init(name, upper) do
         :global.register_name(name, self)
