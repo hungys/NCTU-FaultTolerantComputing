@@ -25,7 +25,7 @@ defmodule StubbornLink do
 
     def on_send(fl, sent, dest, mid, msg) do
         send fl, {:send, dest, mid, msg}
-        MapSet.put(sent, {:send, dest, mid, msg})
+        MapSet.put(sent, {dest, mid, msg})
     end
 
     def on_deliver(upper, src, mid, msg) do
@@ -33,6 +33,6 @@ defmodule StubbornLink do
     end
 
     def on_timeout(fl, sent) do
-        Enum.each(sent, fn(s) -> send fl, s end)
+        Enum.each(sent, fn(s) -> send fl, Tuple.insert_at(s, 0, :send) end)
     end
 end

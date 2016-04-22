@@ -31,7 +31,7 @@ defmodule Hw2 do
 
     def listen(dest, :normal) do
         receive do
-            {:deliver, _, _, msg} -> IO.puts("#{to_string(dest)}: #{msg}")
+            {:deliver, _, _, msg} -> IO.puts("#{dest}: #{msg}")
         end
         listen(dest, :normal)
     end
