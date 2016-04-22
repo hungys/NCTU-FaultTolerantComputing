@@ -2,12 +2,12 @@ defmodule Hw2 do
     @msgsize 4096
     @msgcount 51200
 
-    def init(name, link \\ :perfect, mode \\ :normal) do
-        case name do
-            :p ->
-                launch("p", "q", link, mode)
-            :q ->
-                launch("q", "p", link, mode)
+    def init(link \\ :perfect, mode \\ :normal) do
+        case Node.self do
+            :p@localhost ->
+                launch(:p@localhost, :q@localhost, link, mode)
+            :q@localhost ->
+                launch(:q@localhost, :p@localhost, link, mode)
             _ ->
                 IO.puts("Only p and q are supported!")
         end
@@ -31,7 +31,7 @@ defmodule Hw2 do
 
     def listen(dest, :normal) do
         receive do
-            {:deliver, _, _, msg} -> IO.puts("#{dest}: #{msg}")
+            {:deliver, _, _, msg} -> IO.puts("#{to_string(dest)}: #{msg}")
         end
         listen(dest, :normal)
     end
@@ -64,14 +64,14 @@ defmodule Hw2 do
     end
 
     def connect(dest) do
-        case Node.connect(String.to_atom("#{dest}@localhost")) do
+        case Node.connect(dest) do
             :true -> IO.puts("connected")
             :false -> IO.puts("connect fail")
         end
     end
 
     def disconnect(dest) do
-        case Node.disconnect(String.to_atom("#{dest}@localhost")) do
+        case Node.disconnect(dest) do
             :true -> IO.puts("disconnected")
             :false -> IO.puts("disconnect fail")
         end
