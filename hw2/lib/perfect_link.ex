@@ -18,8 +18,8 @@ defmodule PerfectLink do
     end
 
     def on_deliver(upper, delivered, src, mid, msg) do
-        if MapSet.member?(delivered, {src, mid, msg}) == :false do
-            delivered = MapSet.put(delivered, {src, mid, msg})
+        if MapSet.member?(delivered, mid) == :false do
+            delivered = MapSet.put(delivered, mid)
             send upper, {:deliver, src, mid, msg}
         end
         delivered
