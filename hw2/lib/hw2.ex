@@ -1,6 +1,6 @@
 defmodule Hw2 do
     @msgsize 4096
-    @msgcount 51200
+    @msgcount 256000
 
     def init(link \\ :perfect, mode \\ :normal) do
         case Node.self do
@@ -14,7 +14,7 @@ defmodule Hw2 do
     end
 
     def launch(name, dest, link, mode) do
-        listener = spawn(Hw2, :listen, [dest, mode])
+        listener = spawn(Hw2, :listen, [dest, link, mode, 0])
         case link do
             :perfect ->
                 pl = spawn(PerfectLink, :init, [name, listener])
@@ -29,24 +29,41 @@ defmodule Hw2 do
         end
     end
 
-    def listen(dest, :normal) do
+    def listen(dest, link, :normal, cnt) do
         receive do
             {:deliver, _, _, msg} -> IO.puts("#{dest}: #{msg}")
         end
-        listen(dest, :normal)
+        listen(dest, link, :normal, cnt)
     end
 
-    def listen(dest, :exp) do
+    def listen(dest, link, :exp, cnt) do
         receive do
             {:deliver, _, _, :start_exp} ->
                 ts = :os.system_time(:milli_seconds)
                 IO.puts("Experiment starts at #{ts}")
             {:deliver, _, _, :end_exp} ->
+                if link == :fairloss do
+                    ts = :os.system_time(:milli_seconds)
+                    IO.puts("Experiment ends at #{ts}")
+                end
+            _ -> :true
+        end
+
+        cnt = cnt + 1
+        if link == :perfect do
+            if cnt == @msgcount + 2 do
                 ts = :os.system_time(:milli_seconds)
                 IO.puts("Experiment ends at #{ts}")
-            # _ -> IO.write(".")
+            end
         end
-        listen(dest, :exp)
+
+        cond do
+            cnt > (@msgcount - 1000) -> IO.puts(cnt)
+            rem(cnt, 1000) == 0 -> IO.write(".")
+            true -> :true
+        end
+
+        listen(dest, link, :exp, cnt)
     end
 
     def sender(link, dest) do
