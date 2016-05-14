@@ -1,6 +1,6 @@
 defmodule Hw3 do
-    def init(type \\ :fifo) do
-        listener = spawn(Hw3, :listen, [])
+    def init(type \\ :fifo, validation \\ :true) do
+        listener = spawn(Hw3, :listen, [Map.new, validation])
         bcast = nil
 
         case type do
@@ -23,37 +23,77 @@ defmodule Hw3 do
         tokens = String.split(msg, " ")
         case Enum.at(tokens, 0) do
             "neighbor" -> neighbor(bcast, Enum.at(tokens, 1))
-            "connect" -> connect(Enum.at(tokens, 1))
-            "disconnect" -> disconnect(Enum.at(tokens, 1))
+            "connect" -> connect(bcast, Enum.at(tokens, 1))
+            "disconnect" -> disconnect(bcast, Enum.at(tokens, 1))
             _ -> broadcast(bcast, msg)
         end
         node_loop(bcast)
     end
 
-    def listen() do
+    def listen(delivered, validation \\ :false) do
         receive do
             {:deliver, bid, bsrc, msg} ->
                 IO.puts("#{bsrc}: #{msg}")
+                if validation == :true do
+                    delivered = validate_reliable(delivered, bsrc, msg)
+                end
             {:deliver, bid, bsrc, seqno, msg} ->
-                IO.puts("#{bsrc}: #{msg}")
+                IO.puts("#{bsrc}: (seqno=#{seqno}) #{msg}")
+                if validation == :true do
+                    delivered = validate_fifo(delivered, bsrc, msg)
+                end
         end
-        listen
+        listen(delivered, validation)
     end
 
     def neighbor(bcast, name) do
-        connect(name)
+        connect(bcast, name)
         send bcast, {:add_neighbor, String.to_atom("#{name}@localhost")}
     end
 
-    def connect(name) do
-        Node.connect(String.to_atom("#{name}@localhost"))
+    def connect(bcast, name) do
+        node = String.to_atom("#{name}@localhost")
+        send bcast, {:link, node}
+        if Node.connect(node) do
+            IO.puts("Connect success.")
+        end
     end
 
-    def disconnect(name) do
-        Node.disconnect(String.to_atom("#{name}@localhost"))
+    def disconnect(bcast, name) do
+        node = String.to_atom("#{name}@localhost")
+        send bcast, {:unlink, node}
+        if Node.disconnect(node) do
+            IO.puts("Disconnect success.")
+        end
     end
 
     def broadcast(bcast, msg) do
         send bcast, {:broadcast, UUID.uuid4(), msg}
+    end
+
+    def validate_reliable(delivered, bsrc, msg) do
+        if Map.has_key?(delivered, bsrc) == :false do
+            delivered = Map.put(delivered, bsrc, [])
+        end
+
+        delivered = Map.put(delivered, bsrc, delivered[bsrc] ++ [msg])
+        IO.puts("----- hash(#{bsrc}) = #{md5(Enum.sort(delivered[bsrc]))}")
+
+        delivered
+    end
+
+    def validate_fifo(delivered, bsrc, msg) do
+        if Map.has_key?(delivered, bsrc) == :false do
+            delivered = Map.put(delivered, bsrc, "")
+        end
+
+        delivered = Map.put(delivered, bsrc, delivered[bsrc] <> msg)
+        IO.puts("----- hash(#{bsrc}) = #{md5(delivered[bsrc])}")
+
+        delivered
+    end
+
+    def md5(data) do
+        Base.encode16(:erlang.md5(data), case: :lower)
     end
 end

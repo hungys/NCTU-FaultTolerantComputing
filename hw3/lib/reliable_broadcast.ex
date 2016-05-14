@@ -16,6 +16,8 @@ defmodule ReliableBroadcast do
                 neighbors = on_add_neighbor(neighbors, name)
             {:remove_neighbor, name} ->
                 neighbors = on_remove_neighbor(neighbors, name)
+            {:link, name} -> send pl, {:link, name}
+            {:unlink, name} -> send pl, {:unlink, name}
         end
         listen(upper, pl, neighbors, delivered)
     end

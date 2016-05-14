@@ -15,6 +15,8 @@ defmodule FIFOBroadcast do
                 on_add_neighbor(rb, name)
             {:remove_neighbor, name} ->
                 on_remove_neighbor(rb, name)
+            {:link, name} -> send rb, {:link, name}
+            {:unlink, name} -> send rb, {:unlink, name}
         end
         listen(upper, rb, seqno, msgbag, next)
     end

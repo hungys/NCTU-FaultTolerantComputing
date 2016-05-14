@@ -16,6 +16,8 @@ defmodule StubbornLink do
                 send_ack(fl, src, mid)
             {:ack, _, mid} ->
                 sent = Map.delete(sent, mid)
+            {:link, name} -> send fl, {:link, name}
+            {:unlink, name} -> send fl, {:unlink, name}
             :timeout -> on_timeout(fl, sent)
         end
         listen(upper, fl, sent)

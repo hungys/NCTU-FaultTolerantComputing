@@ -9,6 +9,8 @@ defmodule PerfectLink do
             {:send, dest, mid, msg} -> on_send(sl, dest, mid, msg)
             {:deliver, src, mid, msg} ->
                 delivered = on_deliver(upper, delivered, src, mid, msg)
+            {:link, name} -> send sl, {:link, name}
+            {:unlink, name} -> send sl, {:unlink, name}
         end
         listen(upper, sl, delivered)
     end
