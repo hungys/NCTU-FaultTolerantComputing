@@ -7,7 +7,7 @@ defmodule ReliableBroadcast do
     def listen(upper, pl, neighbors, delivered) do
         receive do
             {:broadcast, bid, msg} ->
-                on_broadcast(pl, neighbors, bid, self, msg)
+                on_broadcast(pl, neighbors, bid, Node.self, msg)
             {:broadcast, bid, bsrc, msg} ->
                 on_broadcast(pl, neighbors, bid, bsrc, msg)
             {:deliver, src, mid, msg} ->
@@ -29,7 +29,9 @@ defmodule ReliableBroadcast do
         {bid, bsrc, msg} = msg
         if MapSet.member?(delivered, bid) == :false do
             delivered = MapSet.put(delivered, bid)
-            send self, {:broadcast, bid, bsrc, msg}
+            if bsrc != Node.self do
+                send self, {:broadcast, bid, bsrc, msg}
+            end
             send upper, {:deliver, bid, bsrc, msg}
         end
         delivered

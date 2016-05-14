@@ -33,9 +33,9 @@ defmodule Hw3 do
     def listen() do
         receive do
             {:deliver, bid, bsrc, msg} ->
-                IO.puts(msg)
+                IO.puts("#{bsrc}: #{msg}")
             {:deliver, bid, bsrc, seqno, msg} ->
-                IO.puts(msg)
+                IO.puts("#{bsrc}: #{msg}")
         end
         listen
     end
