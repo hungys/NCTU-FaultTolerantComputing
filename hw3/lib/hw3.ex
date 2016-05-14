@@ -1,6 +1,6 @@
 defmodule Hw3 do
-    def init(type \\ :fifo, validation \\ :true) do
-        listener = spawn(Hw3, :listen, [Map.new, validation])
+    def init(type \\ :fifo, mode \\ :normal, validation \\ :true) do
+        listener = spawn(Hw3, :listen, [Map.new, mode, validation, 0])
         bcast = nil
 
         case type do
@@ -26,25 +26,52 @@ defmodule Hw3 do
             "connect" -> connect(bcast, Enum.at(tokens, 1))
             "disconnect" -> disconnect(bcast, Enum.at(tokens, 1))
             "topo" -> topo(bcast, Enum.at(tokens, 1))
+            "perf" -> perf(bcast, Enum.at(tokens, 1))
             _ -> broadcast(bcast, msg)
         end
         node_loop(bcast)
     end
 
-    def listen(delivered, validation \\ :false) do
+    def listen(delivered, mode \\ :normal, validation \\ :false, cnt) do
         receive do
+            {:deliver, _, _, :exp_start} ->
+                ts = :os.system_time(:milli_seconds)
+                IO.puts("Experiment starts at #{ts}")
+            {:deliver, _, _, :exp_end} -> true
             {:deliver, _, bsrc, msg} ->
-                IO.puts("#{bsrc}: #{msg}")
+                case mode do
+                    :normal -> IO.puts("#{bsrc}: #{msg}")
+                    :exp ->
+                        if String.starts_with?(msg, "count=") do
+                            cnt = String.to_integer(Enum.at(String.split(msg, "="), 1))
+                        else
+                            IO.write(".")
+                            cnt = cnt - 1
+                            if cnt == 0 do
+                                ts = :os.system_time(:milli_seconds)
+                                IO.puts("\nExperiment ends at #{ts}")
+                            end
+                        end
+                end
                 if validation == :true do
                     delivered = validate_reliable(delivered, bsrc, msg)
                 end
+            {:deliver, _, _, _, :exp_start} ->
+                ts = :os.system_time(:milli_seconds)
+                IO.puts("Experiment starts at #{ts}")
+            {:deliver, _, _, _, :exp_end} ->
+                ts = :os.system_time(:milli_seconds)
+                IO.puts("\nExperiment ends at #{ts}")
             {:deliver, _, bsrc, seqno, msg} ->
-                IO.puts("#{bsrc}: (seqno=#{seqno}) #{msg}")
+                case mode do
+                    :normal -> IO.puts("#{bsrc}: (seqno=#{seqno}) #{msg}")
+                    :exp -> IO.write(".")
+                end
                 if validation == :true do
                     delivered = validate_fifo(delivered, bsrc, msg)
                 end
         end
-        listen(delivered, validation)
+        listen(delivered, mode, validation, cnt)
     end
 
     def neighbor(bcast, name) do
@@ -183,5 +210,13 @@ defmodule Hw3 do
                         neighbor(bcast, "a")
                 end
         end
+    end
+
+    def perf(bcast, num) do
+        num = String.to_integer(num)
+        broadcast(bcast, :exp_start)
+        broadcast(bcast, "count=#{num}")
+        for _ <- 1..num, do: broadcast(bcast, "Hello World")
+        broadcast(bcast, :exp_end)
     end
 end
