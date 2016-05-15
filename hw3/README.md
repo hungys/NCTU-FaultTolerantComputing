@@ -1,8 +1,6 @@
 HW3: FIFO Broadcast
 ===================
 
-> 資科工碩 0456018 洪聿昕
-
 # Design
 
 In this homework, we implement two kinds of broadcast protocol, which are *reliable broadcast* and *FIFO broadcast*. We leverage *perfect link* that we implemented in HW2 as the underlying communication link.
